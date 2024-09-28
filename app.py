@@ -1,9 +1,21 @@
 from flask import Flask, jsonify
 from influxdb_client import InfluxDBClient, QueryApi
 import os
+import logging
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Set up logging configuration based on the environment variable
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG').upper()
+
+if LOG_LEVEL == 'DEBUG':
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.INFO)
+
+# Create a logger
+logger = logging.getLogger(__name__)
 
 # InfluxDB configuration
 INFLUXDB_URL = os.getenv('INFLUXDB_URL', '')
@@ -18,6 +30,8 @@ query_api = client.query_api()
 
 @app.route('/latest', methods=['GET'])
 def get_aqi_data():
+    logger.debug(f"Querying InfluxDB with range: {INFLUXDB_RANGE}")
+
     query = f'''
     from(bucket: "{INFLUXDB_BUCKET}")
     |> range(start: {INFLUXDB_RANGE})
@@ -27,7 +41,11 @@ def get_aqi_data():
     |> limit(n: 100)
     '''
     
-    result = query_api.query(org=INFLUXDB_ORG, query=query)
+    try:
+        result = query_api.query(org=INFLUXDB_ORG, query=query)
+    except Exception as e:
+        logger.error(f"Error querying InfluxDB: {e}")
+        return jsonify({"error": "Failed to query data"}), 500
     
     # Process the result to extract required fields
     data_list = []
@@ -40,6 +58,7 @@ def get_aqi_data():
             }
             data_list.append(data)
 
+    logger.info(f"Successfully retrieved {len(data_list)} records.")
     return jsonify(data_list)
 
 if __name__ == '__main__':
