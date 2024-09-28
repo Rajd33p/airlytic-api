@@ -16,5 +16,5 @@ COPY . .
 # Expose port 5000 for the Flask API
 EXPOSE 5000
 
-# Command to run the Flask app using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app", "--workers", "4", "--timeout", "120"]
+# Run the Flask API
+CMD ["python", "app.py"]
