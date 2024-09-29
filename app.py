@@ -62,4 +62,10 @@ def get_aqi_data():
     return jsonify(data_list)
 
 if __name__ == '__main__':
+    # Print all environment variables
+    logger.info("Starting Flask app with the following environment variables:")
+    for key, value in os.environ.items():
+        logger.info(f"{key}: {value}")
+
+    # Run the Flask app
     app.run(host='0.0.0.0', port=5000)
