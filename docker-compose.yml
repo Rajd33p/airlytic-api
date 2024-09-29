@@ -2,6 +2,8 @@ version: '3'
 services:
   flask-api:
     build: .
+    env_file:
+      - stack.env
     ports:
       - "5000:5000"
     restart: always
